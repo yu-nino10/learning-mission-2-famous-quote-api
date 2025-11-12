@@ -1,0 +1,6 @@
+@learning_mission_2_famous_quote_api_HostAddress = http://localhost:5101
+
+GET {{learning_mission_2_famous_quote_api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
