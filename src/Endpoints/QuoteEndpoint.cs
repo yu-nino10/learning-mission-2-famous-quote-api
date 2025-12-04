@@ -1,4 +1,36 @@
 
+// **作るもの：**
+// 名言をランダムに返したり、追加・検索できるAPI
+
+// **必須要件：**
+// GET /api/quotes/random
+// → ランダムに1つの名言を返す
+
+// GET /api/quotes?author=名前
+// → 特定の著者の名言を返す
+
+// GET /api/quotes?search=キーワード
+// → キーワードを含む名言を返す
+
+// POST /api/quotes
+// → 新しい名言を追加（メモリ内リストに保存）
+
+// Body: { "text": "名言", "author": "著者" }
+
+// **ボーナス要件：**
+// GET /api/quotes/authors
+// → 登録されている著者一覧を返す（LINQ の Distinct 使用）
+
+// GET /api/quotes/stats
+// → 統計情報を返す（総数、著者数など）
+
+// **実装の流れ：**
+// 1. Quote モデルクラス作成
+// 2. 静的リスト（List<Quote>）で初期データ準備
+// 3. LINQ を使った検索・フィルタリング実装
+// 4. POST エンドポイント実装
+// 5. クエリパラメータの処理
+
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Http;
 
@@ -19,15 +51,25 @@ public static class QuoteEndpoint
         // パスのグルーピング
         var path = app.MapGroup("/api");
         path.MapGet("/quotes/{author}", GetQuoteByAuthor);
+        path.MapGet("/quotes/random", GetQuoteRandom);
         
         /// <summary>
         /// 特定の著者の名言を返す
         /// </summary>
         /// <param name="author">著者</param>
-        async Task<IResult> GetQuoteByAuthor(string author)
+        IResult GetQuoteByAuthor(string author)
         {
             var quote = quotes.Where(q => q.author == author);
-            return Results.Ok(quote);
+            return TypedResults.Ok(quote);
+        }
+
+        /// <summary>
+        /// ランダムに1つの名言を返す
+        /// </summary>
+        IResult GetQuoteRandom()
+        {
+            var quote = quotes.OrderBy(q => Guid.NewGuid()).Take(1);
+            return TypedResults.Ok(quote);
         }
     } 
 }
