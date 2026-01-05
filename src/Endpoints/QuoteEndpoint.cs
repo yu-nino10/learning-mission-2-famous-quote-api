@@ -24,7 +24,6 @@
 
 // POST /api/quotes
 // → 新しい名言を追加（メモリ内リストに保存）
-
 // Body: { "text": "名言", "author": "著者" }
 
 // **ボーナス要件：**
@@ -59,10 +58,23 @@ public static class QuoteEndpoint
         };
 
         // パスのグルーピング
-        var path = app.MapGroup("/api");
-        path.MapGet("/quotes/{author}", GetQuoteByAuthor);
-        path.MapGet("/quotes/random", GetQuoteRandom);
+        var path = app.MapGroup("/api/quotes");
+        path.MapGet("/random", GetQuoteRandom);
+        path.MapGet("/author/{author}", GetQuoteByAuthor);
+        path.MapGet("/search/{Word}", GetQuoteByKeyWord);
+        path.MapPost("/", AddNewQuote);
+        path.MapGet("/authors", GetAuthorsList);
+        path.MapGet("/stats", GetStats);
         
+        /// <summary>
+        /// ランダムに1つの名言を返す
+        /// </summary>
+        IResult GetQuoteRandom()
+        {
+            var quote = quotes.OrderBy(q => Guid.NewGuid()).Take(1);
+            return TypedResults.Ok(quote);
+        }
+
         /// <summary>
         /// 特定の著者の名言を返す
         /// </summary>
@@ -74,17 +86,49 @@ public static class QuoteEndpoint
         }
 
         /// <summary>
-        /// ランダムに1つの名言を返す
+        /// 特定のキーワードを含む名言を返す
         /// </summary>
-        IResult GetQuoteRandom()
+        /// <param name="word">キーワード</param>
+        IResult GetQuoteByKeyWord(string word)
         {
-            var quote = quotes.OrderBy(q => Guid.NewGuid()).Take(1);
+            var quote = quotes.Where(q => q.text.Contains(word));
             return TypedResults.Ok(quote);
         }
-    } 
+
+        /// <summary>
+        /// 新しい名言を追加
+        /// </summary>
+        /// <param name="quote">追加する名言</param>
+        IResult AddNewQuote(Quote quote)
+        {
+            quotes.Add(quote);
+            return TypedResults.Ok(quote);
+        }
+
+        /// <summary>
+        /// 登録されている著者一覧を返す
+        /// </summary>
+        /// <param name="word">キーワード</param>
+        IResult GetAuthorsList()
+        {
+            var quote = quotes.Select(q => q.author).Distinct();
+            return TypedResults.Ok(quote);
+        }
+
+        /// <summary>
+        /// 統計情報を返す（総数、著者数など）
+        /// </summary>
+        IResult GetStats()
+        {
+            var stats = new
+            {
+                totalQuotes = quotes.Count,
+                totalAuthors = quotes.Select(q => q.author).Distinct().Count()
+            };
+            return TypedResults.Ok(stats);
+        }
+    }
 }
-
-
 
 
 
